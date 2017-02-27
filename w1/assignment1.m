@@ -12,7 +12,6 @@
 clearvars; close all; clc
 
 %% Question 2
-% 1.
 S_t = 100; r_t = 0.05; sigma_t = 0.2;
 
 u_1_tpd   = 0;
@@ -42,8 +41,18 @@ cov_mat = cor_mat .* var_map;
 R = mvnrnd(MU, cov_mat, N);
 corr(R(:, 1), R(:, 3)) % verify the correlation is -0.5
 corr(R(:, 1), R(:, 2)) % verify the correlation is 0
+corr(R(:, 3), R(:, 2)) % verify the correlation is 0
 
-% def parameters ànd helper functions for calculation
+% as the r_tpd and sigma_tpd could be zero, we force then to its absolute
+% value. However, the probability of this event is extremely small.
+neg_r_tpd_idx = find(R(:, 2) + r_t < 0);
+neg_sigma_tpd_idx = find(R(:, 3) + sigma_t < 0);
+
+% convert the negative values to its absolute value
+R(neg_r_tpd_idx, 2) = - r_t - R(neg_r_tpd_idx, 2);                                     
+R(neg_sigma_tpd_idx, 3) = - sigma_t - R(neg_sigma_tpd_idx, 3);  
+
+% def parameters and helper functions for calculation
 t = 0; T = 1; K = 100; Delta = 1/252;
 get_d1 = @(t, T, K, S, r, sigma) (log(S./K) + (r + 0.5*sigma.^2) * (T-t))/...
                                                     (sigma * sqrt(T-t));
@@ -57,8 +66,8 @@ d1_t = get_d1(t, T, K, S_t, r_t, sigma_t);
 d2_t = get_d2(t, T, K, S_t, r_t, sigma_t);
 C_bs_t = get_C_bs(t, T, K, S_t, r_t, sigma_t);
 
-% in matrix R we have X1_tpd, X2_tpd and X3_tpd respectively. tpd means t
-% plus delat
+% in matrix R we have X1_tpd, X2_tpd and X3_tpd respectively.      
+% tpd means t plus delat
 t = Delta;
 S_tpd = exp(R(:, 1) + log(S_t));
 r_tpd = R(:, 2) + r_t;
@@ -74,18 +83,24 @@ L_t_tpd = -(C_bs_tpd - C_bs_t);
 bar(X, N/(sum(N)*diff(X(1:2))), 1)
 grid on;
 xlabel('$L(t, t+\Delta)$', 'interpreter', 'latex', 'fontsize', 15)
-ylabel('Probability')
+ylabel('Probability density')
 set(gca, 'fontsize', 12)
 
+% calculate delta, rho and vega
 delta = normcdf(d1_t)
 rho = K * T * exp(-r_t * T) * normcdf(d2_t)
 vega = S_t * normpdf(d1_t) * sqrt(T)
+% calculate contribution to linear loss of each term
+var1 = (delta)^2 * S_t^2 * var(R(:, 1))
+var2 = (rho)^2 * var(R(:, 2))
+var3 = (vega)^2 * var(R(:, 3))
 
+% calculate linearlized loss
 lized_L_t_tpd = -(delta * S_t * R(:, 1) + rho * R(:, 2) + vega * R(:, 3));
 figure(2)
 [N_, X_] = hist(lized_L_t_tpd, 95);
 bar(X_, N_/(sum(N_)*diff(X_(1:2))), 1)
 grid on
 xlabel('$L^\delta(t, t+\Delta)$', 'interpreter', 'latex', 'fontsize', 15)
-ylabel('Probability')
+ylabel('Probability density')
 set(gca, 'fontsize', 12)
