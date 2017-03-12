@@ -40,18 +40,29 @@ for i=1:(size(Return, 1)-503)
     L(i) = -b' * Return(i+503, :)';
     VaR_95(i) = -b' * mu + sqrt(b' * Sigma * b) * norminv(0.95);
     VaR_99(i) = -b' * mu + sqrt(b' * Sigma * b) * norminv(0.99);
-    breach_95(i) = VaR_95(i) > L(i);
-    breach_99(i) = VaR_99(i) > L(i);
+    
+    breach_95(i) = VaR_95(i) < L(i);
+    breach_99(i) = VaR_99(i) < L(i);
+
 end
 figure(1)
-plot(L, 'k'); hold on;
-plot(VaR_95, 'b'); plot(VaR_99, 'r'); 
+xaxis = 1:960;
+plot(L, 'k', 'linewidth', 1); hold on;
+plot(VaR_95, 'b', 'linewidth', 2); plot(VaR_99, 'r', 'linewidth', 2); 
+legend('Loss', 'VaR_{95}', 'VaR_{99}')
+xlabel('date', 'interpreter', 'latex')
+ylabel('loss', 'interpreter', 'latex')
+plot(xaxis(breach_95), VaR_95(breach_95), 'g.', 'markersize', 25)
+plot(xaxis(breach_99), VaR_99(breach_99), 'y.', 'markersize', 25)
+set(gca, 'fontsize', 15)
+times95 = sum(double(breach_95))
+times99 = sum(double(breach_99))
 
 %% Q2
 % 1
 clearvars; close all; clc
 p = 0.5;
-VaR_95 = geoinv(0.95, p);
+VaR_95 = geoinv(0.95, p)
 alpha  = 0.9:0.0001:0.99;
 VaR_alpha = geoinv(alpha, p);
 plot(alpha, VaR_alpha, 'linewidth', 1.8)
@@ -66,7 +77,7 @@ VaR_X = poissinv(alpha, 1);
 VaR_Y = poissinv(alpha, 2);
 VaR_Z = poissinv(alpha, 3);
 plot(alpha, VaR_X, alpha, VaR_Y, alpha, VaR_Z, 'linewidth', 1.8)
-legend('\lambda=1', '\lambda=2', '\lambda=1+2=3', 'interpreter', 'latex')
+legend('VaR_\alpha(X)', 'VaR_\alpha(Y)', 'VaR_\alpha(L)')
 xlabel('$\alpha$', 'interpreter', 'latex')
 ylabel('$VaR_{\alpha}$', 'interpreter', 'latex')
 title('$L{\sim}Poisson(\lambda)$', 'interpreter', 'latex')
