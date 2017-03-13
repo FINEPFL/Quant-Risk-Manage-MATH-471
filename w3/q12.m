@@ -26,30 +26,30 @@ yhoo_price = raw_data{1, 4}(1+numMSFT+numITEL:end);
 
 Price = [msft_price itel_price yhoo_price];
 
-%% march 11 2013 to march 10 2016 corresponds to 503 and 1259
+%% march 11 2013 to march 10 2016 corresponds to 503 and 1258
 getReturn = @(P) log(P(2:end, :)./P(1:end-1, :));
 Return    = getReturn(Price);
 b_ = [100;
       100*Price(503, 1)/ Price(503, 2);
       100*Price(503, 1)/ Price(503, 3);];
      
-for i=1:(size(Return, 1)-503)
-    mu    = mean(Return(i:i+503, :))';
-    Sigma = cov(Return(i:i+503, :));
-    b = b_ .* Price(i+503, :)';
-    L(i) = -b' * Return(i+503, :)';
-    VaR_95(i) = -b' * mu + sqrt(b' * Sigma * b) * norminv(0.95);
-    VaR_99(i) = -b' * mu + sqrt(b' * Sigma * b) * norminv(0.99);
+for i=503:1258
+    mu    = mean(Return(i-503+1:i-1, :))';
+    Sigma = cov(Return(i-503+1:i-1, :));
+    b = b_ .* Price(i-1, :)';
+    L(i-503+1) = -b' * Return(i, :)';
+    VaR_95(i-503+1) = -b' * mu + sqrt(b' * Sigma * b) * norminv(0.95);
+    VaR_99(i-503+1) = -b' * mu + sqrt(b' * Sigma * b) * norminv(0.99);
     
-    breach_95(i) = VaR_95(i) < L(i);
-    breach_99(i) = VaR_99(i) < L(i);
+    breach_95(i-503+1) = VaR_95(i-503+1) < L(i-503+1);
+    breach_99(i-503+1) = VaR_99(i-503+1) < L(i-503+1);
 
 end
 figure(1)
-xaxis = 1:960;
+xaxis=1:length(VaR_95);
 plot(L, 'k', 'linewidth', 1); hold on;
 plot(VaR_95, 'b', 'linewidth', 2); plot(VaR_99, 'r', 'linewidth', 2); 
-legend('Loss', 'VaR_{95}', 'VaR_{99}')
+legend('Daily Loss', 'VaR_{95}', 'VaR_{99}')
 xlabel('date', 'interpreter', 'latex')
 ylabel('loss', 'interpreter', 'latex')
 plot(xaxis(breach_95), VaR_95(breach_95), 'g.', 'markersize', 25)
