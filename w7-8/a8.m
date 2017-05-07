@@ -35,7 +35,7 @@ ylabel('$x_2^{pseu}$', 'interpreter', 'latex')
 
 % MLE 
 % theta_x is the parameter estimated and vc is the negative loglikelihood
-[theta_c, vc] = fmincon(@(x) mll(PSE, x, 'Clayton'), 0, 0, 0);
-[theta_g, vg] = fmincon(@(x) mll(PSE, x, 'Gumbel'), 1, 0, 0);
-[theta_f, vf] = fmincon(@(x) mll(PSE, x, 'Frank'), 0, 0, 0);
+[theta_c, vc] = fmincon(@(x) nll(PSE, x, 'Clayton'), 0, 0, 0);
+[theta_g, vg] = fmincon(@(x) nll(PSE, x, 'Gumbel'), 1, 0, 0);
+[theta_f, vf] = fmincon(@(x) nll(PSE, x, 'Frank'), 0, 0, 0);
 
